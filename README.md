@@ -1,10 +1,18 @@
 # modcopy: click-to-copy buttons for code blocks in Claude Code
 
-A [Claude Code](https://code.claude.com) mod that adds a clickable copy button
-under every code block in Claude's replies, right in the terminal:
+A [Claude Code](https://code.claude.com) mod that sets every code block of
+Claude's replies on its own padded band, with a clickable copy button right
+under it, in the terminal:
 
 ```
-[ ⧉ bash #1 ]  [ ⧉ sql #2 ]
+  ┌ grey band ─────────────────────────┐
+  │                                    │
+  │   SELECT id, username              │
+  │   FROM users;                      │
+  │                                    │
+  └────────────────────────────────────┘
+
+  ▒▒  ⧉  copier sql  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒   muted ruby bar, ruby button
 ```
 
 ## Why
@@ -48,31 +56,41 @@ box, then **Plugins**, **Add marketplace** with `kwop/modcopy`, then
 
 ## Usage
 
-- One code block in a reply: `[ ⧉ copier bash ]`. Several: one numbered button
-  per block, in order (`⧉ bash #1`, `⧉ sql #2`, ...).
-- Click a button: the block lands in your clipboard and a notification confirms
-  it (`Copié : bash #1 (3 lignes)`), or tells you why the copy failed.
-- Buttons are drawn in ruby (`#E0115F`) and turn white under the pointer.
+- Each closed code block is drawn on a padded grey band (your theme's
+  `bashMessageBackgroundColor`, the band behind `!` shell commands, so it
+  follows light and dark themes), with Claude Code's own syntax highlighting.
+- Under each block, after a blank line, a full-width muted ruby bar (`#4A1027`)
+  holds the button: `⧉  copier sql`, white on ruby (`#E0115F`). Claude Code
+  inverts it under the pointer. The bar has room for more buttons later.
+- Click the button: the block lands in your clipboard and a notification
+  confirms it (`Copié : sql (2 lignes)`), or tells you why the copy failed.
 - The UI labels are in French (`copier`, `Copié`, `Copie impossible`).
+- Replies without a code block are left exactly as Claude Code draws them.
+- In the desktop app and VS Code the mod does nothing: they already draw code
+  blocks with their own copy button.
 
 Without the mod, the built-in `/copy` command opens a picker of the last reply's
 code blocks, which also copies the source text.
 
 ## How it works
 
-The mod hooks `ui.render` on `AssistantMessage`: it finds the closed fenced
-blocks (```` ``` ```` or `~~~`) in the reply's markdown, keeps Claude Code's own
-drawing of the reply, and adds one `Button` per block underneath. A press calls
-`$.ui.copy`, the same path as `/copy` (`pbcopy`, `wl-copy`/`xclip`/`xsel`,
-PowerShell `Set-Clipboard`, or OSC 52 over SSH).
+The mod hooks `ui.render` on `AssistantMessage` in the terminal. When a reply
+holds closed fenced blocks (```` ``` ```` or `~~~`), it redraws the reply: the
+prose as `Markdown` (Claude Code's own renderer), each block as `Code` on its
+band, and a `Button` under each one. A press calls `$.ui.copy`, the same path as
+`/copy` (`pbcopy`, `wl-copy`/`xclip`/`xsel`, PowerShell `Set-Clipboard`, or
+OSC 52 over SSH).
 
 ## Limitations
 
-- Buttons sit at the bottom of the reply, numbered in order, not directly under
-  each block.
-- A block that is still streaming gets its button once its closing fence
-  arrives.
+- Replies with code are redrawn by the mod: prose uses Claude Code's markdown
+  renderer, but a future Claude Code release that changes how replies look will
+  not be mirrored exactly in those replies.
+- A block that is still streaming is drawn as plain markdown until its closing
+  fence arrives; it then gets its band and button.
 - Summarised reply rows are left untouched.
+- The mouse pointer does not turn into a hand over the button: the mod API has
+  no way to set the terminal's pointer shape.
 
 ## Development
 

@@ -1,6 +1,6 @@
 {
   "name": "copy-code-buttons",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Adds a clickable copy button under each code block of Claude's replies in the terminal; copies the block verbatim, without the line breaks the terminal adds when wrapping.",
   "author": { "name": "kwop" },
   "license": "MIT",
