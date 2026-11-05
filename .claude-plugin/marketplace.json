@@ -1,0 +1,14 @@
+{
+  "name": "modcopy",
+  "description": "Claude Code mods by kwop: click-to-copy buttons for code blocks in the terminal.",
+  "owner": {
+    "name": "kwop"
+  },
+  "plugins": [
+    {
+      "name": "copy-code-buttons",
+      "source": "./",
+      "description": "Clickable copy buttons for code blocks in Claude Code's terminal UI."
+    }
+  ]
+}
