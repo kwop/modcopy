@@ -110,6 +110,31 @@ test('a press copies the block verbatim, backslashes kept, no trailing newline',
   await ui.unmount()
 })
 
+test('a fence indented under a list item loses that indent, so a heredoc EOF starts its line', async ($, on) => {
+  engineRow(on)
+  const copied: string[] = []
+  on('ui.copy', (_: any, e: any) => {
+    copied.push(e.text)
+    return { value: { isCopied: true } }
+  })
+  answerToasts(on, [])
+
+  const text = [
+    '1. Écris le fichier :',
+    '',
+    '   ```bash',
+    "   cat > conf.yml <<'EOF'",
+    '   root:',
+    '     key: 1',
+    '   EOF',
+    '   ```',
+  ].join('\n')
+  const ui = await mountReply($, text)
+  await ui.press({ key: 'copy-0' })
+  expect(copied).toEqual(["cat > conf.yml <<'EOF'\nroot:\n  key: 1\nEOF"])
+  await ui.unmount()
+})
+
 test('a refused copy says why', async ($, on) => {
   engineRow(on)
   const toasts: string[] = []

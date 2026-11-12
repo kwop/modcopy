@@ -20,7 +20,7 @@ function face(label: string): string {
 function segments(markdown: string): Segment[] {
   const out: Segment[] = []
   let prose: string[] = []
-  let open: { fence: string; lang: string; header: string; lines: string[] } | null = null
+  let open: { fence: string; lang: string; header: string; indent: number; lines: string[] } | null = null
   let index = 0
 
   const flush = () => {
@@ -31,15 +31,26 @@ function segments(markdown: string): Segment[] {
 
   for (const line of markdown.split('\n')) {
     if (open === null) {
-      const start = /^\s{0,3}(`{3,}|~{3,})\s*([\w+#.-]*)/.exec(line)
-      if (start) open = { fence: start[1] ?? '```', lang: start[2] ?? '', header: line, lines: [] }
-      else prose.push(line)
+      const start = /^(\s{0,3})(`{3,}|~{3,})\s*([\w+#.-]*)/.exec(line)
+      if (start) {
+        open = {
+          fence: start[2] ?? '```',
+          lang: start[3] ?? '',
+          header: line,
+          indent: (start[1] ?? '').length,
+          lines: [],
+        }
+      } else prose.push(line)
       continue
     }
     const close = new RegExp(`^\\s{0,3}${open.fence[0]}{${open.fence.length},}\\s*$`)
     if (close.test(line)) {
       flush()
-      out.push({ kind: 'code', lang: open.lang || 'code', code: open.lines.join('\n'), index: index++ })
+      // A fence indented under a list item indents its content as much: drop
+      // that indent, or a heredoc's closing `EOF` is copied with spaces before it.
+      const strip = new RegExp(`^ {0,${open.indent}}`)
+      const code = open.lines.map(l => l.replace(strip, '')).join('\n')
+      out.push({ kind: 'code', lang: open.lang || 'code', code, index: index++ })
       open = null
     } else {
       open.lines.push(line)
